@@ -1,5 +1,5 @@
-name: lingua_lens
-description: AR-powered language translation app
+name: ar_translator_app
+description: A new Flutter project.
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -10,17 +10,26 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.2
-  camera: ^0.11.0+2
-  google_mlkit_text_recognition: ^0.15.0
-  permission_handler: ^12.0.0+1
-  http: ^1.1.0
-  path_provider: ^2.1.1
+  camera: ^0.10.5+9
+  permission_handler: ^11.3.0
+  path_provider: ^2.1.2
   path: ^1.8.3
+  http: ^1.2.0
+  shared_preferences: ^2.2.2
+  provider: ^6.1.1
+  flutter_tts: ^3.8.5
+  flutter_dotenv: ^5.1.0
+  image_picker: ^1.0.7
+  
+  # Google ML Kit packages - keeping only essential ones
+  google_mlkit_commons: ^0.6.0
+  google_mlkit_text_recognition: ^0.11.0
+  google_mlkit_translation: ^0.9.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^2.0.0
 
 flutter:
   uses-material-design: true

@@ -5,9 +5,11 @@ import 'package:http/http.dart' as http;
 import 'package:camera/camera.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'dart:io';
 import 'package:flutter/services.dart'; // For clipboard functionality
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'widgets/translation_overlay_painter.dart';
+import 'services/translation_service.dart';
+import 'services/camera_service.dart';
 
 // Check if we're running on web
 bool get isWeb => kIsWeb;
@@ -56,7 +58,6 @@ class NoCameraScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // These are actual icons available in Flutter:
             Icon(Icons.no_photography, size: 100, color: Colors.grey),
             SizedBox(height: 16),
             Text('No camera detected on this device'),
@@ -79,155 +80,43 @@ class TranslatorScreen extends StatefulWidget {
 }
 
 class TranslatorScreenState extends State<TranslatorScreen> with WidgetsBindingObserver {
+  // Services
+  final TranslationService _translationService = TranslationService();
+  final CameraService _cameraService = CameraService();
+  
+  // Camera and UI state
   CameraController? _cameraController;
-  late TextRecognizer _textRecognizer;
   bool _isCameraInitialized = false;
   bool _isProcessingFrame = false;
   bool _isCameraPermissionGranted = false;
   bool _isARMode = false;
-
+  bool _isLoading = false;
+  String _errorMessage = '';
+  bool _isOfflineMode = false;
+  
+  // Translation state
   final TextEditingController _textController = TextEditingController();
   String _translatedText = '';
   String _sourceLang = 'en';
   String _targetLang = 'es';
-  bool _isLoading = false;
-  String _errorMessage = '';
-  bool _isOfflineMode = false;
-  List<String> _detectedTexts = [];
-  String _selectedDetectedText = '';
-
-  // Dictionary for offline translations
-  final Map<String, Map<String, Map<String, String>>> _offlineDictionary = {
-    'en': {
-      'es': {
-        'hello': 'hola',
-        'world': 'mundo',
-        'hello world': 'hola mundo',
-        'good morning': 'buenos días',
-        'good afternoon': 'buenas tardes',
-        'good evening': 'buenas noches',
-        'goodbye': 'adiós',
-        'thank you': 'gracias',
-        'please': 'por favor',
-        'yes': 'sí',
-        'no': 'no',
-        'how are you': 'cómo estás',
-        'my name is': 'me llamo',
-        'what is your name': 'cómo te llamas',
-        'i don\'t understand': 'no entiendo',
-        'sorry': 'lo siento',
-        'excuse me': 'disculpe',
-        'where is': 'dónde está',
-        'help': 'ayuda',
-        'water': 'agua',
-        'food': 'comida',
-        'restaurant': 'restaurante',
-        'hotel': 'hotel',
-        'airport': 'aeropuerto',
-        'train station': 'estación de tren',
-        'bus station': 'estación de autobús',
-        'how much': 'cuánto cuesta',
-        'book': 'libro',
-        'pen': 'bolígrafo',
-        'table': 'mesa',
-        'chair': 'silla',
-        'door': 'puerta',
-        'window': 'ventana',
-        'phone': 'teléfono',
-        'computer': 'computadora',
-        'car': 'coche',
-        'house': 'casa',
-      },
-      'fr': {
-        'hello': 'bonjour',
-        'world': 'monde',
-        'hello world': 'bonjour le monde',
-        'good morning': 'bonjour',
-        'good afternoon': 'bon après-midi',
-        'good evening': 'bonsoir',
-        'goodbye': 'au revoir',
-        'thank you': 'merci',
-        'please': 's\'il vous plaît',
-        'yes': 'oui',
-        'no': 'non',
-        'how are you': 'comment allez-vous',
-        'my name is': 'je m\'appelle',
-        'what is your name': 'comment vous appelez-vous',
-        'i don\'t understand': 'je ne comprends pas',
-        'sorry': 'désolé',
-        'excuse me': 'excusez-moi',
-        'where is': 'où est',
-        'help': 'aide',
-        'water': 'eau',
-        'food': 'nourriture',
-        'restaurant': 'restaurant',
-        'hotel': 'hôtel',
-        'airport': 'aéroport',
-        'train station': 'gare',
-        'bus station': 'gare routière',
-        'how much': 'combien ça coûte',
-        'book': 'livre',
-        'pen': 'stylo',
-        'table': 'table',
-        'chair': 'chaise',
-        'door': 'porte',
-        'window': 'fenêtre',
-        'phone': 'téléphone',
-        'computer': 'ordinateur',
-        'car': 'voiture',
-        'house': 'maison',
-      },
-      'de': {
-        'hello': 'hallo',
-        'world': 'welt',
-        'hello world': 'hallo welt',
-        'good morning': 'guten morgen',
-        'good afternoon': 'guten tag',
-        'good evening': 'guten abend',
-        'goodbye': 'auf wiedersehen',
-        'thank you': 'danke',
-        'please': 'bitte',
-        'yes': 'ja',
-        'no': 'nein',
-        'how are you': 'wie geht es dir',
-        'my name is': 'ich heiße',
-        'what is your name': 'wie heißt du',
-        'i don\'t understand': 'ich verstehe nicht',
-        'sorry': 'entschuldigung',
-        'excuse me': 'entschuldigen sie',
-        'where is': 'wo ist',
-        'help': 'hilfe',
-        'water': 'wasser',
-        'food': 'essen',
-        'restaurant': 'restaurant',
-        'hotel': 'hotel',
-        'airport': 'flughafen',
-        'train station': 'bahnhof',
-        'bus station': 'busbahnhof',
-        'how much': 'wie viel kostet',
-      }
-    },
-  };
-
-  final Map<String, String> _languages = {
-    'en': 'English',
-    'es': 'Spanish',
-    'fr': 'French',
-    'de': 'German',
-    'it': 'Italian',
-    'pt': 'Portuguese',
-    'ru': 'Russian',
-    'zh': 'Chinese',
-    'ja': 'Japanese',
-    'ko': 'Korean',
-  };
+  Map<String, ARTranslationResult> _arTranslationResults = {};
+  
+  // Settings
+  bool _autoDetectLanguage = true;
+  bool _saveTranslations = true;
+  bool _useSmartTranslations = true;
+  bool _isPronunciationMode = false;
+  
+  // History
+  List<String> _recentTranslations = [];
+  Map<String, String> _conversationMemory = {};
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _textController.text = "Hello world";
-    _initializeTextRecognizer();
+    _initializeCamera();
     _checkPermission();
     _checkConnection();
   }
@@ -253,7 +142,7 @@ class TranslatorScreenState extends State<TranslatorScreen> with WidgetsBindingO
   }
 
   void _initializeTextRecognizer() {
-    _textRecognizer = TextRecognizer();
+    // This method is no longer used in the new implementation
   }
 
   Future<void> _initializeCamera() async {
@@ -261,29 +150,23 @@ class TranslatorScreenState extends State<TranslatorScreen> with WidgetsBindingO
       await _cameraController!.dispose();
     }
 
-    final CameraController cameraController = CameraController(
+    _cameraController = CameraController(
       widget.camera,
-      ResolutionPreset.medium,
+      ResolutionPreset.high,
       enableAudio: false,
     );
 
     try {
-      await cameraController.initialize();
-
+      await _cameraController!.initialize();
       if (mounted) {
         setState(() {
-          _cameraController = cameraController;
           _isCameraInitialized = true;
         });
-
-        if (_isARMode) {
-          _startTextRecognition();
-        }
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'Camera initialization failed: ${e.toString()}';
+          _errorMessage = 'Failed to initialize camera: $e';
         });
       }
     }
@@ -292,6 +175,10 @@ class TranslatorScreenState extends State<TranslatorScreen> with WidgetsBindingO
   Future<void> _startTextRecognition() async {
     if (!_isCameraInitialized || _isProcessingFrame || _cameraController == null) return;
 
+    setState(() {
+      _arTranslationResults.clear();
+    });
+
     try {
       await _cameraController!.startImageStream((CameraImage image) async {
         if (_isProcessingFrame) return;
@@ -299,19 +186,41 @@ class TranslatorScreenState extends State<TranslatorScreen> with WidgetsBindingO
         _isProcessingFrame = true;
 
         try {
-          // Process frames here
-          // This is simplified - in actual implementation you would:
-          // 1. Convert CameraImage to InputImage
-          // 2. Run TextRecognizer on the InputImage
-          // 3. Update the UI with detected text
-
-          // For now, just simulating detection
-          await Future.delayed(const Duration(seconds: 1));
-
-          if (mounted) {
-            setState(() {
-              _isProcessingFrame = false;
-            });
+          final inputImage = await _cameraService.processImage(
+            image,
+            widget.camera.sensorOrientation,
+          );
+          
+          if (inputImage != null) {
+            final recognizedText = await _cameraService.recognizeText(inputImage);
+            
+            final Map<String, ARTranslationResult> newResults = {};
+            
+            for (TextBlock block in recognizedText.blocks) {
+              if (block.text.length < 3) continue;
+              
+              String translation = _translationService.getOfflineTranslation(
+                block.text,
+                _sourceLang,
+                _targetLang,
+              );
+              
+              if (translation.isNotEmpty && translation.toLowerCase() != block.text.toLowerCase()) {
+                newResults[block.text] = ARTranslationResult(
+                  originalText: block.text,
+                  translatedText: translation,
+                  boundingBox: block.boundingBox,
+                  confidence: 0.7, // Default confidence value since TextBlock doesn't have confidence property
+                );
+              }
+            }
+            
+            if (mounted) {
+              setState(() {
+                _arTranslationResults = newResults;
+                _isProcessingFrame = false;
+              });
+            }
           }
         } catch (e) {
           if (mounted) {
@@ -339,7 +248,7 @@ class TranslatorScreenState extends State<TranslatorScreen> with WidgetsBindingO
       setState(() {
         _isLoading = true;
         _errorMessage = '';
-        _detectedTexts = [];
+        _arTranslationResults.clear();
       });
     }
 
@@ -351,7 +260,7 @@ class TranslatorScreenState extends State<TranslatorScreen> with WidgetsBindingO
 
       final XFile file = await _cameraController!.takePicture();
       final InputImage inputImage = InputImage.fromFilePath(file.path);
-      final RecognizedText recognizedText = await _textRecognizer.processImage(inputImage);
+      final RecognizedText recognizedText = await _cameraService.recognizeText(inputImage);
 
       // Extract text blocks
       final List<String> extractedTexts = [];
@@ -372,13 +281,13 @@ class TranslatorScreenState extends State<TranslatorScreen> with WidgetsBindingO
 
       if (mounted) {
         setState(() {
-          _detectedTexts = extractedTexts;
+          _arTranslationResults = {};
           _isLoading = false;
         });
       }
 
       // If we found text, show the selection dialog
-      if (_detectedTexts.isNotEmpty && mounted) {
+      if (_arTranslationResults.isNotEmpty && mounted) {
         _showTextSelectionDialog();
       } else if (mounted) {
         setState(() {
@@ -411,14 +320,13 @@ class TranslatorScreenState extends State<TranslatorScreen> with WidgetsBindingO
             width: double.maxFinite,
             child: ListView.builder(
               shrinkWrap: true,
-              itemCount: _detectedTexts.length,
+              itemCount: _arTranslationResults.length,
               itemBuilder: (context, index) {
                 return ListTile(
-                  title: Text(_detectedTexts[index]),
+                  title: Text(_arTranslationResults.values.elementAt(index).originalText),
                   onTap: () {
                     setState(() {
-                      _selectedDetectedText = _detectedTexts[index];
-                      _textController.text = _detectedTexts[index];
+                      _textController.text = _arTranslationResults.values.elementAt(index).originalText;
                     });
                     Navigator.pop(context);
                     _translate();
@@ -491,19 +399,19 @@ class TranslatorScreenState extends State<TranslatorScreen> with WidgetsBindingO
     text = text.trim().toLowerCase();
 
     // Check if we have a direct translation
-    if (_offlineDictionary.containsKey(_sourceLang) &&
-        _offlineDictionary[_sourceLang]!.containsKey(_targetLang) &&
-        _offlineDictionary[_sourceLang]![_targetLang]!.containsKey(text)) {
-      return _offlineDictionary[_sourceLang]![_targetLang]![text]!;
+    if (_translationService.offlineDictionary.containsKey(_sourceLang) &&
+        _translationService.offlineDictionary[_sourceLang]!.containsKey(_targetLang) &&
+        _translationService.offlineDictionary[_sourceLang]![_targetLang]!.containsKey(text)) {
+      return _translationService.offlineDictionary[_sourceLang]![_targetLang]![text]!;
     }
 
     // If not, try to translate word by word
     final words = text.split(' ');
     final translatedWords = words.map((word) {
-      if (_offlineDictionary.containsKey(_sourceLang) &&
-          _offlineDictionary[_sourceLang]!.containsKey(_targetLang) &&
-          _offlineDictionary[_sourceLang]![_targetLang]!.containsKey(word.toLowerCase())) {
-        return _offlineDictionary[_sourceLang]![_targetLang]![word.toLowerCase()]!;
+      if (_translationService.offlineDictionary.containsKey(_sourceLang) &&
+          _translationService.offlineDictionary[_sourceLang]!.containsKey(_targetLang) &&
+          _translationService.offlineDictionary[_sourceLang]![_targetLang]!.containsKey(word.toLowerCase())) {
+        return _translationService.offlineDictionary[_sourceLang]![_targetLang]![word.toLowerCase()]!;
       }
       return word; // Keep original if no translation found
     }).toList();
@@ -615,7 +523,7 @@ class TranslatorScreenState extends State<TranslatorScreen> with WidgetsBindingO
     if (_cameraController != null) {
       _cameraController!.dispose();
     }
-    _textRecognizer.close();
+    _cameraService.dispose();
 
     super.dispose();
   }
@@ -760,12 +668,12 @@ class TranslatorScreenState extends State<TranslatorScreen> with WidgetsBindingO
                   ),
                   value: _sourceLang,
                   items: (_isOfflineMode ?
-                  _offlineDictionary.keys.toList() :
-                  _languages.keys.toList())
+                  _translationService.offlineDictionary.keys.toList() :
+                  _translationService.languages.keys.toList())
                       .map((code) {
                     return DropdownMenuItem<String>(
                       value: code,
-                      child: Text(_languages[code] ?? code),
+                      child: Text(_translationService.languages[code] ?? code),
                     );
                   }).toList(),
                   onChanged: (value) {
@@ -782,8 +690,8 @@ class TranslatorScreenState extends State<TranslatorScreen> with WidgetsBindingO
                 onPressed: () {
                   // In offline mode, only allow swaps that we support
                   if (_isOfflineMode &&
-                      (!_offlineDictionary.containsKey(_targetLang) ||
-                          !_offlineDictionary[_targetLang]!.containsKey(_sourceLang))) {
+                      (!_translationService.offlineDictionary.containsKey(_targetLang) ||
+                          !_translationService.offlineDictionary[_targetLang]!.containsKey(_sourceLang))) {
                     setState(() {
                       _errorMessage = 'This language direction is not supported offline';
                     });
@@ -805,13 +713,13 @@ class TranslatorScreenState extends State<TranslatorScreen> with WidgetsBindingO
                     contentPadding: EdgeInsets.symmetric(horizontal: 8),
                   ),
                   value: _targetLang,
-                  items: (_isOfflineMode && _offlineDictionary.containsKey(_sourceLang) ?
-                  _offlineDictionary[_sourceLang]!.keys.toList() :
-                  _languages.keys.toList())
+                  items: (_isOfflineMode && _translationService.offlineDictionary.containsKey(_sourceLang) ?
+                  _translationService.offlineDictionary[_sourceLang]!.keys.toList() :
+                  _translationService.languages.keys.toList())
                       .map((code) {
                     return DropdownMenuItem<String>(
                       value: code,
-                      child: Text(_languages[code] ?? code),
+                      child: Text(_translationService.languages[code] ?? code),
                     );
                   }).toList(),
                   onChanged: (value) {
@@ -857,7 +765,7 @@ class TranslatorScreenState extends State<TranslatorScreen> with WidgetsBindingO
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Original: $_selectedDetectedText',
+                  'Original: $_textController.text',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
@@ -929,12 +837,12 @@ class TranslatorScreenState extends State<TranslatorScreen> with WidgetsBindingO
     ),
     value: _sourceLang,
     items: (_isOfflineMode ?
-    _offlineDictionary.keys.toList() :
-    _languages.keys.toList())
+    _translationService.offlineDictionary.keys.toList() :
+    _translationService.languages.keys.toList())
         .map((code) {
     return DropdownMenuItem<String>(
     value: code,
-    child: Text(_languages[code] ?? code),
+    child: Text(_translationService.languages[code] ?? code),
     );
     }).toList(),
     onChanged: (value) {
@@ -952,8 +860,8 @@ class TranslatorScreenState extends State<TranslatorScreen> with WidgetsBindingO
       onPressed: () {
         // In offline mode, only allow swaps that we support
         if (_isOfflineMode &&
-            (!_offlineDictionary.containsKey(_targetLang) ||
-                !_offlineDictionary[_targetLang]!.containsKey(_sourceLang))) {
+            (!_translationService.offlineDictionary.containsKey(_targetLang) ||
+                !_translationService.offlineDictionary[_targetLang]!.containsKey(_sourceLang))) {
           setState(() {
             _errorMessage = 'This language direction is not supported offline';
           });
@@ -979,13 +887,13 @@ class TranslatorScreenState extends State<TranslatorScreen> with WidgetsBindingO
             border: OutlineInputBorder(),
           ),
           value: _targetLang,
-          items: (_isOfflineMode && _offlineDictionary.containsKey(_sourceLang) ?
-          _offlineDictionary[_sourceLang]!.keys.toList() :
-          _languages.keys.toList())
+          items: (_isOfflineMode && _translationService.offlineDictionary.containsKey(_sourceLang) ?
+          _translationService.offlineDictionary[_sourceLang]!.keys.toList() :
+          _translationService.languages.keys.toList())
               .map((code) {
             return DropdownMenuItem<String>(
               value: code,
-              child: Text(_languages[code] ?? code),
+              child: Text(_translationService.languages[code] ?? code),
             );
           }).toList(),
           onChanged: (value) {
