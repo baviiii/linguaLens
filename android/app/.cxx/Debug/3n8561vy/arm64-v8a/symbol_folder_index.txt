@@ -1,0 +1,1 @@
+C:\Users\asees\AndroidStudioProjects\ar_translator_app\build\app\intermediates\cxx\Debug\3n8561vy\obj\arm64-v8a

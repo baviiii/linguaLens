@@ -1,0 +1,118 @@
+# AR Translator App Documentation
+
+## Overview
+AR Translator is a mobile application that aims to provide real-time object detection and translation using AR (Augmented Reality) technology. Currently implemented as a simulation, the app demonstrates the concept of pointing your device at objects to identify them and provide translations in your target language.
+
+## Current Implementation
+
+### Core Features
+- **Simulated AR Experience**: The app currently uses a simulation that randomly selects objects from a predefined list when scanning.
+- **Object Translation**: Translates detected objects from English to several target languages (Spanish, French, German, etc.)
+- **Modern UI**: Dark-themed interface with glowing elements and card-based design.
+- **Interactive Elements**: Speech assistance features through modal bottom sheets.
+
+### Technical Stack
+- **Framework**: Flutter
+- **Dependencies**:
+  - UI: Google Fonts, Lottie (animations)
+  - Camera: Camera package, permission handler
+  - AR: ARCore Flutter plugin (currently in simulation mode)
+  - ML/Translation: Google ML Kit (text recognition, language ID)
+  - State Management: Provider
+  - Navigation: Go Router
+
+## Future Goals
+
+### Short-term Improvements
+1. **Implement Real AR Object Detection**: Replace simulation with actual camera-based object detection using ML Kit or TensorFlow Lite.
+2. **Enhance Translation Accuracy**: Integrate with professional translation APIs for more accurate results.
+3. **Expand Language Support**: Add more languages and dialectic variations.
+
+### Medium-term Goals
+1. **Real-time Translation**: Enable live translation of spoken language as indicated by the "Live Translation" feature.
+2. **AR Markers and Labels**: Overlay translations directly on objects in AR view.
+3. **Offline Mode**: Allow basic functionality without internet connection.
+4. **User Customization**: Let users add custom objects and translations to the database.
+
+### Long-term Vision
+1. **Multi-modal Recognition**: Detect not just objects but text, gestures, and environments.
+2. **Conversation Assistant**: Provide contextual conversation assistance for travelers.
+3. **AR Navigation**: Add direction capabilities with translated signage.
+4. **Learning Mode**: Include features to help users learn new languages through everyday objects.
+
+## Language Testing Support (PTE)
+
+### PTE-Focused Features
+1. **Vocabulary Builder**: Categorized everyday objects to expand vocabulary for PTE tests.
+2. **Pronunciation Practice**: Audio playback of object names with accent options.
+3. **Reading Section Prep**: Identify and translate complex text in real-world situations.
+4. **Real-time Feedback**: Assess spoken descriptions of objects against standard pronunciations.
+
+### Implementation Strategy
+- Create specific PTE practice modules within the app
+- Include common objects and scenarios from PTE exams
+- Provide scoring and improvement tracking for test preparation
+- Implement specific drills that mirror PTE test formats
+
+## Job Interview Preparation
+
+### Interview-Centric Features
+1. **Industry-Specific Vocabulary**: Specialized vocabulary sets for different career fields.
+2. **Common Interview Objects**: Recognition and description of objects typically found in interview settings.
+3. **Conversation Practice**: Simulated interview scenarios with language assistance.
+4. **Cultural Context**: Provide cultural notes on business etiquette across different regions.
+
+### Development Plan
+- Create dedicated "Interview Prep" mode with relevant scenarios
+- Include formal business language training
+- Develop role-playing features for interview practice
+- Provide feedback on formality and appropriateness of language
+
+## Technical Architecture
+
+### Main Components
+1. **AR Widget**: Central UI component for AR interactions (`lib/widgets/ar_widget.dart`)
+2. **AR Service**: Handles AR functionality (`lib/services/ar_service.dart`)
+3. **Translation Service**: Manages object recognition and translation
+
+### Data Flow
+1. User activates scan feature
+2. Camera feed passes to object detection system
+3. Detected objects are identified and processed
+4. Translations are retrieved from local database or API
+5. Results are displayed to the user
+
+## Development Roadmap
+
+### Phase 1: Core Functionality
+- ✅ Basic UI implementation
+- ✅ Simulation mode for concept testing
+- ⬜ Real object detection implementation
+
+### Phase 2: Enhanced Features
+- ⬜ Live translation
+- ⬜ History tracking
+- ⬜ Advanced language selector
+
+### Phase 3: Advanced AR
+- ⬜ AR overlays on real objects
+- ⬜ Environmental understanding
+- ⬜ Social sharing features
+
+### Phase 4: Specialized Modules
+- ⬜ PTE test preparation features
+- ⬜ Job interview language assistance
+- ⬜ Industry-specific vocabularies
+
+## Requirements
+
+### Device Requirements
+- Android 7.0+ or iOS 11.0+ for AR features
+- Camera access permission
+- Internet connection for translation services
+
+### Development Requirements
+- Flutter SDK
+- AR development tools (ARCore for Android, ARKit for iOS)
+- Machine learning models for object detection
+- Audio processing capabilities for pronunciation features 
