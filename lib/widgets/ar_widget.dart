@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:arcore_flutter_plugin/arcore_flutter_plugin.dart';
+import '../services/ar_service.dart';
 
 class ARWidget extends StatefulWidget {
   const ARWidget({super.key});
@@ -21,6 +23,10 @@ class _ARWidgetState extends State<ARWidget> {
   String _targetLanguage = 'es';
   String _detectedText = '';
   String _translatedText = '';
+  
+  late final ARService _arService;
+  bool _isARView = false;
+  bool _isInitialized = false;
 
   final Map<String, String> _languages = {
     'en': 'English',
@@ -38,6 +44,7 @@ class _ARWidgetState extends State<ARWidget> {
   @override
   void initState() {
     super.initState();
+    _arService = ARService();
     _requestCameraPermission();
   }
 
@@ -52,8 +59,50 @@ class _ARWidgetState extends State<ARWidget> {
     }
   }
 
-  void _initializeAR() {
-    // TODO: Initialize AR functionality
+  Future<void> _initializeAR() async {
+    setState(() => _isLoading = true);
+    try {
+      await _arService.initializeAR();
+      setState(() {
+        _isInitialized = true;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'Failed to initialize AR: $e';
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _toggleARView() {
+    setState(() {
+      _isARView = !_isARView;
+    });
+  }
+
+  Widget _buildARView() {
+    return Stack(
+      children: [
+        ArCoreView(
+          onArCoreViewCreated: _onArCoreViewCreated,
+          enableTapRecognizer: true,
+          enablePlaneRenderer: true,
+        ),
+        Positioned(
+          top: 20,
+          right: 20,
+          child: IconButton(
+            icon: const Icon(Icons.close, color: Colors.white),
+            onPressed: _toggleARView,
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _onArCoreViewCreated(ArCoreController controller) {
+    _arService.arCoreController = controller;
   }
 
   void _showConversationTips() {
@@ -150,11 +199,20 @@ class _ARWidgetState extends State<ARWidget> {
 
   @override
   void dispose() {
+    _arService.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!_isInitialized) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_isARView) {
+      return _buildARView();
+    }
+
     final theme = Theme.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFF111214),
@@ -190,11 +248,14 @@ class _ARWidgetState extends State<ARWidget> {
               ),
               const SizedBox(height: 10),
               // Glowing Center Button
-              Center(
-                child: SizedBox(
-                  width: 180,
-                  height: 180,
-                  child: Lottie.asset('assets/jsons/ar_animation.json'),
+              GestureDetector(
+                onTap: _toggleARView,
+                child: Center(
+                  child: SizedBox(
+                    width: 180,
+                    height: 180,
+                    child: Lottie.asset('assets/jsons/ar_animation.json'),
+                  ),
                 ),
               ),
               // Scan Object Button

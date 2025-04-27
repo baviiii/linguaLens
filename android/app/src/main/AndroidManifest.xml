@@ -1,8 +1,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- AR permissions -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-feature android:name="android.hardware.camera.ar" android:required="true"/>
+    <uses-feature android:name="android.hardware.camera" android:required="true"/>
+
     <application
         android:label="ar_translator_app"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- AR metadata -->
+        <meta-data android:name="com.google.ar.core" android:value="required" />
+        
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -41,5 +50,6 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <package android:name="com.google.ar.core" />
     </queries>
 </manifest>
