@@ -71,19 +71,19 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
-      appBar: AppBar(
+        appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.primary,
         title: const Text(
-          'LinguaLens',
+            'LinguaLens',
           style: TextStyle(
-            color: Colors.white,
-            fontSize: 22,
+              color: Colors.white,
+              fontSize: 22,
             fontWeight: FontWeight.w600,
           ),
         ),
         elevation: 2,
-      ),
-      body: SafeArea(
+        ),
+        body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             children: [
@@ -91,7 +91,7 @@ class _HomePageState extends State<HomePage> {
                 padding: const EdgeInsets.all(16),
                 child: Material(
                   elevation: 2,
-                  borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(12),
                   child: Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
@@ -125,9 +125,9 @@ class _HomePageState extends State<HomePage> {
                                   color: Theme.of(context).colorScheme.outline,
                                 ),
                               ),
-                            ),
-                          ),
-                        ],
+                                    ),
+                                  ),
+                                ],
                       ),
                     ),
                   ),
@@ -141,7 +141,7 @@ class _HomePageState extends State<HomePage> {
                     return Wrap(
                       spacing: 16,
                       runSpacing: 16,
-                      children: [
+                        children: [
                         SizedBox(
                           width: cardWidth,
                           child: _buildFeatureCard(
@@ -230,12 +230,12 @@ class _HomePageState extends State<HomePage> {
                       ],
                     );
                   },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
     );
   }
 

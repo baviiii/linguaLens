@@ -4,14 +4,14 @@
   ],
   "cleanCommandsComponents": [
     [
-      "C:\\Users\\asees\\AppData\\Local\\Android\\sdk\\cmake\\3.22.1\\bin\\ninja.exe",
+      "C:\\Users\\asees\\AppData\\Local\\Android\\Sdk\\cmake\\3.22.1\\bin\\ninja.exe",
       "-C",
       "C:\\Users\\asees\\AndroidStudioProjects\\ar_translator_app\\android\\app\\.cxx\\Debug\\3n8561vy\\x86_64",
       "clean"
     ]
   ],
   "buildTargetsCommandComponents": [
-    "C:\\Users\\asees\\AppData\\Local\\Android\\sdk\\cmake\\3.22.1\\bin\\ninja.exe",
+    "C:\\Users\\asees\\AppData\\Local\\Android\\Sdk\\cmake\\3.22.1\\bin\\ninja.exe",
     "-C",
     "C:\\Users\\asees\\AndroidStudioProjects\\ar_translator_app\\android\\app\\.cxx\\Debug\\3n8561vy\\x86_64",
     "{LIST_OF_TARGETS_TO_BUILD}"

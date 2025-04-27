@@ -12,7 +12,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    namespace 'com.google.ar.core.flutter'
+    namespace "com.difrancescogianmarco.arcore_flutter_plugin"
     compileSdkVersion 35
 
     defaultConfig {
